@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>База номеров RMRP</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2a2f3f;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --badge: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    header {
+      text-align: center;
+      padding: 20px 0 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 16px; }
+    .submit-btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .submit-btn:hover { background: var(--accent-hover); }
+    .search-box {
+      margin-bottom: 16px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+    .stats {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+    .list { display: grid; gap: 12px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .plate {
+      background: #ffffff;
+      color: #111827;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 2px solid #111827;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+    }
+    .verified {
+      font-size: 0.78rem;
+      color: var(--badge);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .car { font-size: 1.05rem; font-weight: 600; }
+    .note { color: var(--muted); font-size: 0.9rem; }
+    .photo-link {
+      color: #60a5fa;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      align-self: flex-start;
+    }
+    .photo-link:hover { text-decoration: underline; }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 32px 16px;
+      background: var(--card);
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>База номеров RMRP</h1>
+      <p class="subtitle">Проверенный реестр госномеров с фотоподтверждением. Изменения вносит только модератор.</p>
+      <!-- ВСТАВЬ СЮДА ССЫЛКУ НА СВОЮ GOOGLE ФОРМУ ИЛИ TELEGRAM ВМЕСТО # -->
+      <a class="submit-btn" href="#" target="_blank" rel="noopener">Прислать номер + скриншот</a>
+    </header>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Поиск по номеру, региону или марке авто (например: М159АН или Vesta)..." />
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <div class="list" id="platesList"></div>
+  </div>
+
+  <script>
+    // ==========================================
+    // БАЗА ПРОВЕРЕННЫХ НОМЕРОВ (РЕДАКТИРУЕШЬ ТОЛЬКО ТЫ)
+    // Чтобы добавить новый номер, скопируй блок { ... }, и вставь ниже с новой запятой.
+    // ==========================================
+    const PLATES_DB = [
+      {
+        plate: "М159АН 61",
+        car: "Lada Vesta Cross",
+        note: "Подтверждено скриншотом из игры",
+        photoUrl: "" // Сюда можно вставить прямую ссылку на скриншот (например, с Imgur или Postimages)
+      },
+      {
+        plate: "А001АА 77",
+        car: "BMW M5 E34",
+        note: "Пример второй записи (можешь заменить на свой номер)",
+        photoUrl: ""
+      }
+    ];
+
+    const listEl = document.getElementById("platesList");
+    const statsEl = document.getElementById("stats");
+    const searchInput = document.getElementById("searchInput");
+
+    function render(items) {
+      statsEl.textContent = `Найдено записей: ${items.length} из ${PLATES_DB.length}`;
+      if (items.length === 0) {
+        listEl.innerHTML = `<div class="empty">По вашему запросу ничего не найдено.</div>`;
+        return;
+      }
+      listEl.innerHTML = items.map(item => `
+        <div class="card">
+          <div class="card-top">
+            <span class="plate">${escapeHtml(item.plate)}</span>
+            <span class="verified">✔ Проверено</span>
+          </div>
+          <div class="car">${escapeHtml(item.car)}</div>
+          ${item.note ? `<div class="note">${escapeHtml(item.note)}</div>` : ""}
+          ${item.photoUrl ? `<a class="photo-link" href="${escapeHtml(item.photoUrl)}" target="_blank" rel="noopener">Смотреть фотодоказательство →</a>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim().toLowerCase();
+      const filtered = PLATES_DB.filter(item =>
+        item.plate.toLowerCase().includes(q) ||
+        item.car.toLowerCase().includes(q) ||
+        (item.note && item.note.toLowerCase().includes(q))
+      );
+      render(filtered);
+    });
+
+    render(PLATES_DB);
+  </script>
+</body>
+</html>
